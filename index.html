@@ -1,13 +1,147 @@
-<index class="html">
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Senior project start</title>
-    </head>
-    <body>
-        <h1>This can change anytime.</h1>
-    </body>
-    </html>
-</index>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Senior Project Chatbot</title>
+
+    <style>
+        /* Body styling */
+        body 
+        {
+            font-family: Arial, sans-serif;
+            background-color: #8f8f8f;
+            margin: 0;
+            padding: 15px;
+        }
+
+        /* Chatbox styling */
+        #chatBox 
+        {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            border: 1px solid black;
+            padding: 10px;
+            height: 70vh;
+            overflow-y: auto;
+        }
+
+        /* Message styling */
+        .message 
+        {
+            margin: 8px 0;
+            padding: 8px;
+            border-radius: 5px;
+            max-width: 70%;
+            width: fit-content;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+        
+        /* User and Bot message alignment & colors */
+        .user 
+        {
+            background-color: #85b0db;
+            margin-left: auto;
+            text-align: right;
+        }
+
+        /* bot message styling */
+        .bot 
+        {
+            background-color: #eeeeee;
+            margin-right: auto;
+        }
+
+        /* Text input area styling section */
+        #inputArea 
+        {
+            max-width: 800px;
+            margin: 10px auto 0;
+            display: flex;
+            gap: 20px;
+        }
+
+        textarea 
+        {
+            flex: 1;
+            resize: none;
+            height: 50px;
+            padding: 8px;
+        }
+
+        /* Send button styling */
+        button 
+        {
+            width: 100px;
+                background-color: #4CAF50;
+                color: white;
+                border: none;
+                cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Health Chatbot</h1>
+
+    <div id="chatBox"></div>
+
+    <!-- Input Area controls-->
+    <div id="inputArea">
+        <textarea id="userInput" placeholder="Ask something..."></textarea>
+        <button onclick="sendMessage()">Send</button>
+    </div>
+
+    <!-- Script to grab DOM element references-->
+    <script>
+        const chatContainerbox = document.getElementById("chatBox");
+        const userInput = document.getElementById("userInput");
+
+        // Add message function to chatbox 
+        function addMessage(text, sender) 
+        {
+            const msg = document.createElement("div");
+            msg.classList.add("message", sender);
+            msg.textContent = text;
+            chatContainerbox.appendChild(msg);
+            chatContainerbox.scrollTop = chatContainerbox.scrollHeight;
+        }
+
+        // Temp thing just has the bot Echo the user message
+        //  this section eventually will be the bot logic with LLM integration if needed here
+        async function getBotReply(userMessage) 
+        {
+            return "Placeholder echoing user message: " + userMessage;
+        }
+
+        // Reads the user input and prints it into the chat and has the bot reply
+        async function sendMessage() 
+        {
+            const text = userInput.value.trim();
+            if (text === "") return;
+            userInput.value = "";
+            addMessage(text, "user");
+            addMessage("bot");
+            const reply = await getBotReply(text);
+            chatContainerbox.removeChild(chatContainerbox.lastChild);
+            addMessage(reply, "bot");
+        }
+
+        // Makes it so you can hit enter to send a message and shift enter for a new line
+        userInput.addEventListener("keydown", function(event) {
+            if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // Bot Greeting Message
+        addMessage("Hello I am a health chatbot.", "bot");
+    </script>
+
+</body>
+</html>
