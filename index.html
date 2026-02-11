@@ -154,13 +154,30 @@
             chatContainerbox.scrollTop = chatContainerbox.scrollHeight;
         }
 
-        // Temp thing just has the bot Echo the user message
-        //  this section eventually will be the bot logic with LLM integration if needed here
-        async function getBotReply(userMessage) 
+                async function getBotReply(userMessage) 
         {
-            return "Placeholder echoing user message: " + userMessage;
+            try {
+                const response = await fetch("/api/chat", {
+                    method: "POST",
+                 headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ message: userMessage })
+                });
+
+                const data = await response.json().catch(() => ({}));
+
+                if (!response.ok) {
+                    console.error("API error:", response.status, data);
+                    return data.error || `Server error (${response.status})`;
+                }
+
+                return data.reply || "(empty reply)";
+            } catch (err) {
+                console.error("Fetch failed:", err);
+                return "Could not reach the backend. Is Server.js running?";
+            }
         }
 
+  
         // Reads the user input and prints it into the chat and has the bot reply
         async function sendMessage() 
         {
