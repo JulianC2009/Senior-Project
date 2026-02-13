@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Senior Project Chatbot</title>
+
+    <style>
+        /* Body styling */
+        body 
+        {
+            font-family: Arial, sans-serif;
+            background-color: linear-gradient(135deg, #e8f1f8, #f6fbff);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        /*Main chat container*/
+        .chat-container {
+            width: 90%;
+            max-width: 700px;
+            height: 85vh;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /*Header*/
+        .chat-header {
+            background: #4e94e4;
+            color: white;
+            padding: 15px;
+            font-size: 20px;
+            font-weight: bold;
+            text-align: center;
+
+        }
+
+        /* Chatbox */
+        #chatBox 
+        {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            background: #f7fbff;
+        }
+
+        /* Message styling */
+        .message 
+        {
+            margin: 8px 0;
+            padding: 10px 14px;
+            border-radius: 18px;
+            max-width: 75%;
+            width: fit-content;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-size: 15px;
+        }
+        
+        /* User and Bot message alignment & colors */
+        .user 
+        {
+            background: #4a90e2;
+            color: white;
+            margin-left: auto;
+        }
+
+        /* bot message styling */
+        .bot 
+        {
+            background: #e5edf5;
+            color: #333;
+            margin-right: auto;
+        }
+
+        /* Text input area styling section */
+        #inputArea 
+        {
+            padding: 10px;
+            background: white;
+            border-top: 1px solid #ddd;
+            display: flex;
+            gap: 10px;
+        }
+
+        textarea 
+        {
+            flex: 1;
+            resize: none;
+            height: 45px;
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #4a90e2;
+        }
+
+        /* Send button styling */
+        button 
+        {
+            width: 100px;
+            background: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        button:hover {
+            background: #3b7cc4;
+        }
+    </style>
+</head>
+
+<body>
+    
+<div class="chat-container">
+        <div class="chat-header">Health Assistant Chat</div>
+
+        <div id="chatBox"></div>
+
+    <!-- Input Area controls-->
+    <div id="inputArea">
+        <textarea id="userInput" placeholder="Ask something..."></textarea>
+        <button onclick="sendMessage()">Send</button>
+    </div>
+</div>
+    <!-- Script to grab DOM element references-->
+    <script>
+        const chatContainerbox = document.getElementById("chatBox");
+        const userInput = document.getElementById("userInput");
+
+        // Add message function to chatbox 
+        function addMessage(text, sender) 
+        {
+            const msg = document.createElement("div");
+            msg.classList.add("message", sender);
+            msg.textContent = text;
+            chatContainerbox.appendChild(msg);
+            chatContainerbox.scrollTop = chatContainerbox.scrollHeight;
+        }
+
+                async function getBotReply(userMessage) 
+        {
+            try {
+                const response = await fetch("/api/chat", {
+                    method: "POST",
+                 headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ message: userMessage })
+                });
+
+                const data = await response.json().catch(() => ({}));
+
+                if (!response.ok) {
+                    console.error("API error:", response.status, data);
+                    return data.error || `Server error (${response.status})`;
+                }
+
+                return data.reply || "(empty reply)";
+            } catch (err) {
+                console.error("Fetch failed:", err);
+                return "Could not reach the backend. Is Server.js running?";
+            }
+        }
+
+  
+        // Reads the user input and prints it into the chat and has the bot reply
+        async function sendMessage() 
+        {
+            const text = userInput.value.trim();
+            if (text === "") return;
+            userInput.value = "";
+            addMessage(text, "user");
+            addMessage("bot");
+            const reply = await getBotReply(text);
+            chatContainerbox.removeChild(chatContainerbox.lastChild);
+            addMessage(reply, "bot");
+        }
+
+        // Makes it so you can hit enter to send a message and shift enter for a new line
+        userInput.addEventListener("keydown", function(event) {
+            if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // Bot Greeting Message
+        addMessage("Hello I am a health chatbot.", "bot");
+    </script>
+
+</body>
+</html>
