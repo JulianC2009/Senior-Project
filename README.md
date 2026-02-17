@@ -12,12 +12,12 @@ Python 3.10+ needed, Open API key, Python Virtual environment (optional but reco
 # How to Run
 
 1. Clone the repo
-3. Create a `.env` file:
+2. Create a `.env` file:
    OPENAI_API_KEY=your_api_key_here
-4. Create a virtual environment (optional)
-Open the command prompt and run:
+3. Create a virtual environment (optional)
+4. Open the command prompt and run:
    python -m venv venv
-Next   
+5. Next  
    venv \Scripts\activate
 6. Navigate to the Repo folder in the command prompt
 7. Install the python dependencies using the requirements.txt file
