@@ -1,0 +1,4 @@
+Diabetes is a chronic medical condition characterized by elevated blood glucose levels.
+Common symptoms include increased thirst, frequent urination, and fatigue.
+Type 1 diabetes is autoimmune.
+Type 2 diabetes is often associated with insulin resistance.
