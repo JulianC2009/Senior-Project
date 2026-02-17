@@ -17,15 +17,20 @@ Python 3.10+ needed, Open API key, Python Virtual environment (optional but reco
 3. Create a virtual environment (optional)
 4. Open the command prompt and run
    python -m venv venv
-6. Next  
+6. Next
    venv \Scripts\activate
-7. Navigate to the Repo folder in the command prompt
-8. Install the python dependencies using the requirements.txt file
+8. Navigate to the Repo folder in the command prompt
+9. Install the python dependencies using the requirements.txt file
    pip install -r requirements.txt
-9. Start the server
+   pip install faiss-cpu (for rag pipeline)
+   pip install tiktoken
+   pip install numpy
+11. run the build_index.py
+12. Start the server
    uvicorn Server:app --host 0.0.0.0 --port 3000 --reload
-10. Open:
+13. Open:
    http://localhost:3000
+14. To test the pipeline ask What are common symptoms of diabetes? and it should give you the symptoms in the knowladge_base. If you ask something that isnt in the database it would say that it does not have enough information in the medical database. 
 
 # How to Run Gemini
 1. Clone server.js
