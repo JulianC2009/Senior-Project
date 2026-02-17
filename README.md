@@ -17,14 +17,14 @@ Python 3.10+ needed, Open API key, Python Virtual environment (optional but reco
 3. Create a virtual environment (optional)
 4. Open the command prompt and run
    python -m venv venv
-5. Next  
+6. Next  
    venv \Scripts\activate
-6. Navigate to the Repo folder in the command prompt
-7. Install the python dependencies using the requirements.txt file
+7. Navigate to the Repo folder in the command prompt
+8. Install the python dependencies using the requirements.txt file
    pip install -r requirements.txt
-8. Start the server
+9. Start the server
    uvicorn Server:app --host 0.0.0.0 --port 3000 --reload
-9. Open:
+10. Open:
    http://localhost:3000
 
 # How to Run Gemini
