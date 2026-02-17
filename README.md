@@ -6,14 +6,24 @@ This is where we can see the website/code. (https://julianc2009.github.io/Senior
 
 Built with OpenAI API
 
+# Requirements
+Python 3.10+ needed, Open API key, Python Virtual environment (optional but recommended) 
+
 # How to Run
+
 1. Clone the repo
-2. Run `npm install`
 3. Create a `.env` file:
    OPENAI_API_KEY=your_api_key_here
-4. Start the server:
-   node Server.js
-5. Open:
+4. Create a virtual environment (optional)
+   Open the command prompt and run:
+   python -m venv venv
+   venv \Scripts\activate
+5. Navigate to the Repo folder in the command prompt
+6. Install the python dependencies using the requirements.txt file
+   pip install -r requirements.txt
+7. Start the server
+   uvicorn Server:app --host 0.0.0.0 --port 3000 --reload
+8. Open:
    http://localhost:3000
 
 # How to Run Gemini
