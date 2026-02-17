@@ -1,4 +1,13 @@
 Diabetes is a chronic medical condition characterized by elevated blood glucose levels.
-Common symptoms include increased thirst, frequent urination, and fatigue.
-Type 1 diabetes is autoimmune.
-Type 2 diabetes is often associated with insulin resistance.
+
+Common symptoms of diabetes include:
+- Frequent urination
+- Increased thirst
+- Increased hunger
+- Fatigue
+- Blurred vision
+- Slow wound healing
+
+Type 1 diabetes is caused by autoimmune destruction of insulin-producing beta cells.
+
+Type 2 diabetes is associated with insulin resistance and is more common in adults.
