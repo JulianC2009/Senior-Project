@@ -19,10 +19,11 @@ Built with OpenAI API
 # How to Run Gemini
 1. Clone server.js
 3. run npm install express @google/generative-ai dotenv in command promt
-4. create a .env file and add the key as GEMINI_API_KEY=your_key_here
-5. make sure the file format is - Gemini_API(folder): server.js, .env ->/ Public(Folder inside): index.html(same as the open ai index)
-6. Run the server.js
-7. Open http://localhost:3000
+4. run pip install flask python-dotenv google-generativeai (for python)
+5. create a .env file and add the key as GEMINI_API_KEY=your_key_here
+6. make sure the file format is - Gemini_API(folder): server.js, .env ->/ Public(Folder inside): index.html(same as the open ai index)
+7. Run the server.js
+8. Open http://localhost:3000
    
 
 ## Notes
