@@ -15,7 +15,7 @@ Python 3.10+ needed, Open API key, Python Virtual environment (optional but reco
 2. Create a `.env` file:
    OPENAI_API_KEY=your_api_key_here
 3. Create a virtual environment (optional)
-4. Open the command prompt and run:
+4. Open the command prompt and run
    python -m venv venv
 5. Next  
    venv \Scripts\activate
