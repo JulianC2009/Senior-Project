@@ -52,6 +52,7 @@ async def chat(req: ChatRequest):
 
     try:
         context = ""
+        use_context = False
 
         if index is not None and doc_texts is not None:
             embed_response = client.embeddings.create(
@@ -65,46 +66,49 @@ async def chat(req: ChatRequest):
 
             distances, indices = index.search(query_vector, TOP_K)
 
-            retrieved_chunks = [doc_texts[i] for i in indices[0]]
-            context = "\n\n".join(retrieved_chunks)
+            SIMILARITY_THRESHOLD = 1.0   # adjust if needed
 
-        response = client.responses.create(
-            model="gpt-4.1-mini",
-            input = [
-                {
-                    "role": "system",
-                    "content": f"""
+            if distances[0][0] < SIMILARITY_THRESHOLD:
+                retrieved_chunks = [doc_texts[i] for i in indices[0]]
+                context = "\n\n".join(retrieved_chunks)
+                use_context = True
+
+        if use_context:
+            system_prompt = f"""
 You are a helpful healthcare chatbot.
 
-Use ONLY the information provided in the medical context below.
-If the answer is not in the context, say:
-"I do not have enough information in the medical database."
+Use the medical context below to answer the question.
+If relevant information is provided in the context, prioritize it.
+You may supplement with general medical knowledge if necessary.
 
 Medical Context:
 {context}
 """
-                },
+        else:
+            system_prompt = """
+You are a helpful healthcare chatbot.
+
+Answer the user's question using your general medical knowledge.
+If unsure, clearly state uncertainty.
+"""
+
+        response = client.responses.create(
+            model="gpt-4.1-mini",
+            input=[
+                {"role": "system", "content": system_prompt},
                 {"role": "user", "content": message},
             ],
         )
 
         return ChatResponse(reply=response.output_text or "")
 
-
     except Exception as err:
         status = getattr(err, "status_code", None) or getattr(err, "status", None)
         message = getattr(err, "message", None) or str(err)
 
         print("OpenAI error:", status, message)
-        resp = getattr(err, "response", None)
-        if resp is not None:
-            try:
-                print("OpenAI response:", resp)
-            except Exception:
-                pass
 
         raise HTTPException(status_code=500, detail=message or "OpenAI request failed.")
-
 
 app.mount("/", StaticFiles(directory=".", html=True), name="static")
 
