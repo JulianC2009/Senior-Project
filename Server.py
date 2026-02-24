@@ -7,6 +7,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from openai import OpenAI
+from agents.langgraph_orchestrator import run_orchestrator
 
 # Load .env 
 load_dotenv()
@@ -38,35 +39,57 @@ except Exception as e:
 class ChatRequest(BaseModel):
     message: str
 
+    # simulated security context
+    role: str = "patient"  # patient | doctor | insurance | admin
+    patient_id: str = "patient_001"
+    consent: bool = True
 
 class ChatResponse(BaseModel):
     reply: str
 
 
-# API route 
+# API route
 @app.post("/api/chat", response_model=ChatResponse)
 async def chat(req: ChatRequest):
-    message = (req.message or "").strip()
-    if not message:
+    user_message = (req.message or "").strip()
+    if not user_message:
         raise HTTPException(status_code=400, detail="Missing 'message' in request body.")
 
+    # Agent orchestration with LangGraph
+    # If the request matches a tool/agent path, return that result.
+    # Otherwise fallback to RAG + OpenAI.
+    try:
+        agent_reply = run_orchestrator(
+            user_message=user_message,
+            role=req.role,
+            patient_id=req.patient_id,
+            consent=req.consent,
+        )
+
+        # Convention: tool responses start with "[" in orchestrator_graph.py
+        if isinstance(agent_reply, str) and agent_reply.startswith("["):
+            return ChatResponse(reply=agent_reply)
+
+    except Exception as err:
+        # For RBAC/tool errors 
+        return ChatResponse(reply=f"Access denied / tool error: {str(err)}")
+
+    # RAG + OpenAI fallback
     try:
         context = ""
         use_context = False
 
+        # Retrieve relevant chunks from FAISS if index is loaded
         if index is not None and doc_texts is not None:
             embed_response = client.embeddings.create(
                 model=EMBED_MODEL,
-                input=message
+                input=user_message
             )
 
-            query_vector = np.array(
-                [embed_response.data[0].embedding]
-            ).astype("float32")
-
+            query_vector = np.array([embed_response.data[0].embedding]).astype("float32")
             distances, indices = index.search(query_vector, TOP_K)
 
-            SIMILARITY_THRESHOLD = 1.0   # adjust if needed
+            SIMILARITY_THRESHOLD = 1.0  # adjust if needed
 
             if distances[0][0] < SIMILARITY_THRESHOLD:
                 retrieved_chunks = [doc_texts[i] for i in indices[0]]
@@ -96,7 +119,7 @@ If unsure, clearly state uncertainty.
             model="gpt-4.1-mini",
             input=[
                 {"role": "system", "content": system_prompt},
-                {"role": "user", "content": message},
+                {"role": "user", "content": user_message},
             ],
         )
 
@@ -104,11 +127,9 @@ If unsure, clearly state uncertainty.
 
     except Exception as err:
         status = getattr(err, "status_code", None) or getattr(err, "status", None)
-        message = getattr(err, "message", None) or str(err)
+        err_message = getattr(err, "message", None) or str(err)
 
-        print("OpenAI error:", status, message)
-
-        raise HTTPException(status_code=500, detail=message or "OpenAI request failed.")
+        print("OpenAI error:", status, err_message)
+        raise HTTPException(status_code=500, detail=err_message or "OpenAI request failed.")
 
 app.mount("/", StaticFiles(directory=".", html=True), name="static")
-
