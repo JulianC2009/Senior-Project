@@ -1,9 +1,15 @@
 import os
 import faiss
-import numpy as np 
+import numpy as np
+from dotenv import load_dotenv
 from openai import OpenAI
 
-client = OpenAI()
+load_dotenv()
+
+print("KEY PRESENT:", bool(os.getenv("OPENAI_API_KEY")))
+print("KEY PREFIX:", (os.getenv("OPENAI_API_KEY") or "")[:12])
+
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 EMBEDED_MODEL = "text-embedding-3-small"
 Dimension = 1536
