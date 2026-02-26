@@ -7,6 +7,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from openai import OpenAI
+from agents.langgraph_orchestrator import run_orchestrator
 
 # Load .env 
 load_dotenv()
@@ -38,73 +39,97 @@ except Exception as e:
 class ChatRequest(BaseModel):
     message: str
 
+    # simulated security context
+    role: str = "patient"  # patient | doctor | insurance | admin
+    patient_id: str = "patient_001"
+    consent: bool = True
 
 class ChatResponse(BaseModel):
     reply: str
 
 
-# API route 
+# API route
 @app.post("/api/chat", response_model=ChatResponse)
 async def chat(req: ChatRequest):
-    message = (req.message or "").strip()
-    if not message:
+    user_message = (req.message or "").strip()
+    if not user_message:
         raise HTTPException(status_code=400, detail="Missing 'message' in request body.")
 
+    # Agent orchestration with LangGraph
+    # If the request matches a tool/agent path, return that result.
+    # Otherwise fallback to RAG + OpenAI.
+    try:
+        agent_reply = run_orchestrator(
+            user_message=user_message,
+            role=req.role,
+            patient_id=req.patient_id,
+            consent=req.consent,
+        )
+
+        # Convention: tool responses start with "[" in orchestrator_graph.py
+        if isinstance(agent_reply, str) and agent_reply.startswith("["):
+            return ChatResponse(reply=agent_reply)
+
+    except Exception as err:
+        # For RBAC/tool errors 
+        return ChatResponse(reply=f"Access denied / tool error: {str(err)}")
+
+    # RAG + OpenAI fallback
     try:
         context = ""
+        use_context = False
 
+        # Retrieve relevant chunks from FAISS if index is loaded
         if index is not None and doc_texts is not None:
             embed_response = client.embeddings.create(
                 model=EMBED_MODEL,
-                input=message
+                input=user_message
             )
 
-            query_vector = np.array(
-                [embed_response.data[0].embedding]
-            ).astype("float32")
-
+            query_vector = np.array([embed_response.data[0].embedding]).astype("float32")
             distances, indices = index.search(query_vector, TOP_K)
 
-            retrieved_chunks = [doc_texts[i] for i in indices[0]]
-            context = "\n\n".join(retrieved_chunks)
+            SIMILARITY_THRESHOLD = 1.0  # adjust if needed
 
-        response = client.responses.create(
-            model="gpt-4.1-mini",
-            input = [
-                {
-                    "role": "system",
-                    "content": f"""
+            if distances[0][0] < SIMILARITY_THRESHOLD:
+                retrieved_chunks = [doc_texts[i] for i in indices[0]]
+                context = "\n\n".join(retrieved_chunks)
+                use_context = True
+
+        if use_context:
+            system_prompt = f"""
 You are a helpful healthcare chatbot.
 
-Use ONLY the information provided in the medical context below.
-If the answer is not in the context, say:
-"I do not have enough information in the medical database."
+Use the medical context below to answer the question.
+If relevant information is provided in the context, prioritize it.
+You may supplement with general medical knowledge if necessary.
 
 Medical Context:
 {context}
 """
-                },
-                {"role": "user", "content": message},
+        else:
+            system_prompt = """
+You are a helpful healthcare chatbot.
+
+Answer the user's question using your general medical knowledge.
+If unsure, clearly state uncertainty.
+"""
+
+        response = client.responses.create(
+            model="gpt-4.1-mini",
+            input=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_message},
             ],
         )
 
         return ChatResponse(reply=response.output_text or "")
 
-
     except Exception as err:
         status = getattr(err, "status_code", None) or getattr(err, "status", None)
-        message = getattr(err, "message", None) or str(err)
+        err_message = getattr(err, "message", None) or str(err)
 
-        print("OpenAI error:", status, message)
-        resp = getattr(err, "response", None)
-        if resp is not None:
-            try:
-                print("OpenAI response:", resp)
-            except Exception:
-                pass
-
-        raise HTTPException(status_code=500, detail=message or "OpenAI request failed.")
-
+        print("OpenAI error:", status, err_message)
+        raise HTTPException(status_code=500, detail=err_message or "OpenAI request failed.")
 
 app.mount("/", StaticFiles(directory=".", html=True), name="static")
-
