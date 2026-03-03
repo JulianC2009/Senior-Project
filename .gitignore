@@ -1,0 +1,6 @@
+.env
+.venv/
+__pycache__/
+agents/__pycache__/
+doc_texts.npy
+medical_index.faiss
