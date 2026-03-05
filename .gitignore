@@ -1,6 +1,16 @@
+# Environment
 .env
+venv/
 .venv/
+
+# Python
 __pycache__/
-agents/__pycache__/
-doc_texts.npy
-medical_index.faiss
+*.pyc
+
+# RAG artifacts
+artifacts/*.npy
+artifacts/*.dat
+artifacts/*.faiss
+
+# Old FAISS index
+*.faiss
