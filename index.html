@@ -1,207 +1,280 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Senior Project Chatbot</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Senior Project Chatbot</title>
 
-    <style>
-        /* Body styling */
-        body 
-        {
-            font-family: Arial, sans-serif;
-            background-color: linear-gradient(135deg, #e8f1f8, #f6fbff);
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
+  <style>
 
-        /*Main chat container*/
-        .chat-container {
-            width: 90%;
-            max-width: 700px;
-            height: 85vh;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
+    /* Body styling */
+    body 
+    {
+      font-family: Arial, sans-serif;
+      background-color: linear-gradient(135deg, #e8f1f8, #f6fbff);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
 
-        /*Header*/
-        .chat-header {
-            background: #4e94e4;
-            color: white;
-            padding: 15px;
-            font-size: 20px;
-            font-weight: bold;
-            text-align: center;
+    /* Main Chat container */
+    .chat-container 
+    {
+      width: 90%;
+      max-width: 700px;
+      height: 85vh;
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
 
-        }
+    /* Header */
+    .chat-header 
+    {
+      background: #4e94e4;
+      color: white;
+      padding: 15px;
+      font-size: 20px;
+      font-weight: bold;
+      text-align: center;
+    }
 
-        /* Chatbox */
-        #chatBox 
-        {
-            flex: 1;
-            padding: 15px;
-            overflow-y: auto;
-            background: #f7fbff;
-        }
+    /* Chat controls */
+    .chat-controls 
+    {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      padding: 10px 12px;
+      border-bottom: 1px solid #e6e6e6;
+      background: #ffffff;
+      font-size: 14px;
+      flex-wrap: wrap;
+    }
 
-        /* Message styling */
-        .message 
-        {
-            margin: 8px 0;
-            padding: 10px 14px;
-            border-radius: 18px;
-            max-width: 75%;
-            width: fit-content;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            font-size: 15px;
-        }
-        
-        /* User and Bot message alignment & colors */
-        .user 
-        {
-            background: #4a90e2;
-            color: white;
-            margin-left: auto;
-        }
+    .chat-controls label 
+    {
+      color: #333;
+      font-weight: bold;
+    }
 
-        /* bot message styling */
-        .bot 
-        {
-            background: #e5edf5;
-            color: #333;
-            margin-right: auto;
-        }
+    .chat-controls select 
+    {
+      padding: 6px 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+      background: #fff;
+    }
 
-        /* Text input area styling section */
-        #inputArea 
-        {
-            padding: 10px;
-            background: white;
-            border-top: 1px solid #ddd;
-            display: flex;
-            gap: 10px;
-        }
+    .chat-controls .checkbox 
+    {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      user-select: none;
+    }
 
-        textarea 
-        {
-            flex: 1;
-            resize: none;
-            height: 45px;
-            padding: 10px;
-            border-radius: 10px;
-            border: 1px solid #ccc;
-            font-size: 14px;
-        }
+    /* Chat box */
+    #chatBox 
+    {
+      flex: 1;
+      padding: 15px;
+      overflow-y: auto;
+      background: #f7fbff;
+    }
 
-        textarea:focus {
-            outline: none;
-            border-color: #4a90e2;
-        }
+    /* Message styling */
+    .message 
+    {
+      margin: 8px 0;
+      padding: 10px 14px;
+      border-radius: 18px;
+      max-width: 75%;
+      width: fit-content;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      font-size: 15px;
+    }
 
-        /* Send button styling */
-        button 
-        {
-            width: 100px;
-            background: #4a90e2;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 15px;
-            cursor: pointer;
-            transition: 0.2s;
-        }
+    /* User vs Bot message styling */
+    .user 
+    {
+      background: #4a90e2;
+      color: white;
+      margin-left: auto;
+    }
 
-        button:hover {
-            background: #3b7cc4;
-        }
-    </style>
+    .bot 
+    {
+      background: #e5edf5;
+      color: #333;
+      margin-right: auto;
+    }
+
+    /* Input area and styling */
+    #inputArea 
+    {
+      padding: 10px;
+      background: white;
+      border-top: 1px solid #ddd;
+      display: flex;
+      gap: 10px;
+    }
+
+    textarea 
+    {
+      flex: 1;
+      resize: none;
+      height: 45px;
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+
+    textarea:focus 
+    {
+      outline: none;
+      border-color: #4a90e2;
+    }
+
+    /* Send button styling */
+    button 
+    {
+      width: 100px;
+      background: #4a90e2;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    button:hover 
+    {
+      background: #3b7cc4;
+    }
+  </style>
 </head>
 
 <body>
-    
-<div class="chat-container">
-        <div class="chat-header">Health Assistant Chat</div>
+  <div class="chat-container">
+    <div class="chat-header">Health Assistant Chat</div>
 
-        <div id="chatBox"></div>
+    <div class="chat-controls">
+      <label for="roleSelect">Role:</label>
+      <select id="roleSelect">
+        <option value="patient" selected>patient</option>
+        <option value="doctor">doctor</option>
+        <option value="insurance">insurance</option>
+        <option value="admin">admin</option>
+      </select>
 
-    <!-- Input Area controls-->
-    <div id="inputArea">
-        <textarea id="userInput" placeholder="Ask something..."></textarea>
-        <button onclick="sendMessage()">Send</button>
+      <label for="patientSelect">Patient:</label>
+      <select id="patientSelect">
+        <option value="patient_001" selected>Patient 001</option>
+        <option value="patient_002">Patient 002</option>
+        <option value="patient_003">Patient 003</option>
+        <option value="patient_004">Patient 004</option>
+      </select>
+
+      <label class="checkbox">
+        <input type="checkbox" id="consentCheck" checked />
+        Consent
+      </label>
     </div>
-</div>
-    <!-- Script to grab DOM element references-->
-    <script>
-        const chatContainerbox = document.getElementById("chatBox");
-        const userInput = document.getElementById("userInput");
 
-        // Add message function to chatbox 
-        function addMessage(text, sender) 
-        {
-            const msg = document.createElement("div");
-            msg.classList.add("message", sender);
-            msg.textContent = text;
-            chatContainerbox.appendChild(msg);
-            chatContainerbox.scrollTop = chatContainerbox.scrollHeight;
-        }
+    <div id="chatBox"></div>
 
-                async function getBotReply(userMessage) 
-        {
-            try {
-                const response = await fetch("/api/chat", {
-                    method: "POST",
-                 headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ message: userMessage })
-                });
+    <div id="inputArea">
+      <textarea id="userInput" placeholder="Ask something..."></textarea>
+      <button onclick="sendMessage()">Send</button>
+    </div>
+  </div>
 
-                const data = await response.json().catch(() => ({}));
+  <script>
+    const chatContainerbox = document.getElementById("chatBox");
+    const userInput = document.getElementById("userInput");
+    const patientSelect = document.getElementById("patientSelect");
+    const roleSelect = document.getElementById("roleSelect");
+    const consentCheck = document.getElementById("consentCheck");
 
-                if (!response.ok) {
-                    console.error("API error:", response.status, data);
-                    return data.error || `Server error (${response.status})`;
-                }
+    function addMessage(text, sender) {
+      const msg = document.createElement("div");
+      msg.classList.add("message", sender);
+      msg.textContent = text;
+      chatContainerbox.appendChild(msg);
+      chatContainerbox.scrollTop = chatContainerbox.scrollHeight;
+    }
 
-                return data.reply || "(empty reply)";
-            } catch (err) {
-                console.error("Fetch failed:", err);
-                return "Could not reach the backend. Is Server.js running?";
-            }
-        }
-
-  
-        // Reads the user input and prints it into the chat and has the bot reply
-        async function sendMessage() 
-        {
-            const text = userInput.value.trim();
-            if (text === "") return;
-            userInput.value = "";
-            addMessage(text, "user");
-            addMessage("bot");
-            const reply = await getBotReply(text);
-            chatContainerbox.removeChild(chatContainerbox.lastChild);
-            addMessage(reply, "bot");
-        }
-
-        // Makes it so you can hit enter to send a message and shift enter for a new line
-        userInput.addEventListener("keydown", function(event) {
-            if (event.key === "Enter" && !event.shiftKey) {
-                event.preventDefault();
-                sendMessage();
-            }
+    async function getBotReply(userMessage) {
+      try {
+        const response = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            message: userMessage,
+            role: roleSelect.value,
+            patient_id: patientSelect.value,
+            consent: consentCheck.checked
+          })
         });
 
-        // Bot Greeting Message
-        addMessage("Hello I am a health chatbot.", "bot");
-    </script>
+        const data = await response.json().catch(() => ({}));
 
+        if (!response.ok) {
+          console.error("API error:", response.status, data);
+          return data.error || `Server error (${response.status})`;
+        }
+
+        return data.reply || "(empty reply)";
+      } catch (err) {
+        console.error("Fetch failed:", err);
+        return "Could not reach the backend. Is the server running?";
+      }
+    }
+
+    async function sendMessage() {
+      const text = userInput.value.trim();
+      if (text === "") return;
+
+      userInput.value = "";
+      addMessage(text, "user");
+
+      addMessage("...", "bot");
+      const reply = await getBotReply(text);
+
+      chatContainerbox.removeChild(chatContainerbox.lastChild);
+      addMessage(reply, "bot");
+    }
+
+    userInput.addEventListener("keydown", function (event) {
+      if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        sendMessage();
+      }
+    });
+
+    // Clear chat when switching patient/role helps show identity binding and RBAC
+    function resetChatBanner() {
+      chatContainerbox.innerHTML = "";
+      addMessage("Hello I am a health chatbot.", "bot");
+    }
+
+    patientSelect.addEventListener("change", resetChatBanner);
+    roleSelect.addEventListener("change", resetChatBanner);
+    consentCheck.addEventListener("change", resetChatBanner);
+
+    // Greeting
+    resetChatBanner();
+  </script>
 </body>
 </html>
