@@ -25,6 +25,7 @@ Python 3.10+ needed, Open API key, Python Virtual environment (optional but reco
    pip install faiss-cpu (for rag pipeline)
    pip install tiktoken
    pip install numpy
+10. run build_text_cache.py
 11. run the build_index.py
 12. Start the server
    uvicorn Server:app --host 0.0.0.0 --port 3000 --reload
