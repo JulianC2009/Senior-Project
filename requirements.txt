@@ -5,3 +5,4 @@ openai
 pydantic
 langgraph
 pypdf2
+numpy
