@@ -9,7 +9,6 @@ from agents.insurance_agent import run_insurance_agent
 
 load_dotenv()
 
-# General fallback OpenAI client
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 
@@ -36,7 +35,7 @@ def enforce_access(state, tool_name):
     if tool_name == "insurance" and role not in ["patient", "insurance", "admin"]:
         raise AccessDenied("Access denied: role not permitted for insurance lookup.")
 
-
+# Classifies the user's intent based on keywords
 def classify_intent(state):
     msg = (state.get("user_message") or "").lower()
 
@@ -60,10 +59,9 @@ def classify_intent(state):
 
     return state
 
-
+# Nodes for different agent tools
 def patient_records_node(state):
     enforce_access(state, "patient_records")
-
     state["reply"] = run_patient_agent(
         user_message=state.get("user_message", ""),
         role=state.get("role", "patient"),
@@ -76,15 +74,25 @@ def patient_records_node(state):
 
 def doctor_notes_node(state):
     enforce_access(state, "doctor_notes")
-    pid = state.get("patient_id", "patient_001")
-    state["reply"] = run_doctor_agent(pid)
+    state["reply"] = run_doctor_agent(
+        user_message=state.get("user_message", ""),
+        role=state.get("role", "patient"),
+        patient_id=state.get("patient_id", "patient_001"),
+        consent=bool(state.get("consent", True)),
+    )
+
     return state
 
 
 def insurance_node(state):
     enforce_access(state, "insurance")
-    pid = state.get("patient_id", "patient_001")
-    state["reply"] = run_insurance_agent(pid)
+    state["reply"] = run_insurance_agent(
+        user_message=state.get("user_message", ""),
+        role=state.get("role", "patient"),
+        patient_id=state.get("patient_id", "patient_001"),
+        consent=bool(state.get("consent", True)),
+    )
+
     return state
 
 
@@ -120,6 +128,7 @@ def route_from_intent(state):
 
 graph = StateGraph(dict)
 
+# Node registration
 graph.add_node("classify", classify_intent)
 graph.add_node("patient_records", patient_records_node)
 graph.add_node("doctor_notes", doctor_notes_node)
@@ -128,6 +137,7 @@ graph.add_node("general", general_node)
 
 graph.add_edge(START, "classify")
 
+# Conditional routing for intent classification
 graph.add_conditional_edges(
     "classify",
     route_from_intent,
@@ -139,6 +149,7 @@ graph.add_conditional_edges(
     },
 )
 
+# All paths lead to END after processing
 graph.add_edge("patient_records", END)
 graph.add_edge("doctor_notes", END)
 graph.add_edge("insurance", END)
@@ -147,6 +158,7 @@ graph.add_edge("general", END)
 compiled = graph.compile()
 
 
+# Orchestrator function to run the graph called by Server.py
 def run_orchestrator(user_message, role="patient", patient_id="patient_001", consent=True):
     state = {
         "user_message": user_message,
