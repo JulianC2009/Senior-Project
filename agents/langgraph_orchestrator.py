@@ -34,18 +34,39 @@ def enforce_access(state, tool_name):
 
     if tool_name == "insurance" and role not in ["patient", "insurance", "admin"]:
         raise AccessDenied("Access denied: role not permitted for insurance lookup.")
+    
+    if tool_name == "patient_records" and role not in ["patient", "doctor", "admin"]:
+        raise AccessDenied("Access denied: role not permitted for patient records.")
+
 
 # Classifies the user's intent based on keywords
 def classify_intent(state):
     msg = (state.get("user_message") or "").lower()
 
-    insurance_kws = ["insurance", "copay", "deductible", "coverage", "claim", "premium"]
-    doctor_kws = ["doctor note", "visit note", "clinical note", "physician note"]
+    insurance_kws = [
+        "insurance", "copay", "deductible", "coverage", "claim",
+        "premium", "authorization", "pre-authorization", "prior authorization"
+    ]
+
+    doctor_kws = [
+        "doctor note", "doctor notes", "visit note", "visit notes",
+        "clinical note", "clinical notes", "physician note", "physician notes",
+        "progress note", "progress notes"
+    ]
+
     record_kws = [
         "my record", "my chart", "my file",
-        "my allergies", "my diagnosis", "my conditions",
+        "my allergies", "my diagnosis", "my diagnoses", "my conditions",
         "my labs", "my lab results",
-        "my medications", "my medical history"
+        "my medications", "my medical history",
+        "patient record", "patient records",
+        "current patient record", "current patient records",
+        "selected patient record", "selected patient records",
+        "current record", "current records",
+        "patient chart", "selected patient",
+        "diagnoses", "diagnosis",
+        "medications", "allergies", "lab results", "labs",
+        "medical history"
     ]
 
     if any(kw in msg for kw in insurance_kws):
@@ -58,6 +79,7 @@ def classify_intent(state):
         state["intent"] = "general"
 
     return state
+
 
 # Nodes for different agent tools
 def patient_records_node(state):
@@ -76,7 +98,7 @@ def doctor_notes_node(state):
     enforce_access(state, "doctor_notes")
     state["reply"] = run_doctor_agent(
         user_message=state.get("user_message", ""),
-        role=state.get("role", "patient"),
+        role=state.get("role", "doctor"),
         patient_id=state.get("patient_id", "patient_001"),
         consent=bool(state.get("consent", True)),
     )
