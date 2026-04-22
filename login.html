@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Healthcare Chatbot Login</title>
+
+  <style>
+    /* General page styling */
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #e8f1f8, #f6fbff);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    /* Login card */
+    .login-container {
+      width: 90%;
+      max-width: 420px;
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+      padding: 28px;
+    }
+
+    .login-title {
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 6px;
+      color: #2b2b2b;
+    }
+
+    .login-subtitle {
+      text-align: center;
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 24px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 6px;
+      color: #1e0505;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: #4e95e6;
+    }
+
+    .login-btn {
+      width: 100%;
+      background: #4d95e7;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 15px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .login-btn:hover {
+      background: #3f80ca;
+    }
+
+    .error-box {
+      margin-top: 14px;
+      color: #d2042a;
+      font-size: 14px;
+      min-height: 18px;
+      text-align: center;
+    }
+
+    .demo-box {
+      margin-top: 22px;
+      background: #f7fbfff1;
+      border: 1px solid #d4e3f7;
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 13px;
+      color: #444;
+    }
+
+    .demo-box strong {
+      display: block;
+      margin-bottom: 6px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="login-container">
+    <div class="login-title">Healthcare Chatbot Login</div>
+    <form id="loginForm">
+      <div class="form-group">
+        <label for="username">Username</label>
+
+        <!-- Added autocomplete/spellcheck protections -->
+        <input
+          id="username"
+          type="text"
+          required
+          autocomplete="off"
+          autocapitalize="off"
+          spellcheck="false"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+
+        <!-- Prevent saved password autofill -->
+        <input
+          id="password"
+          type="password"
+          required
+          autocomplete="new-password"
+        />
+      </div>
+
+      <button class="login-btn" type="submit">Login</button>
+    </form>
+
+    <div id="errorBox" class="error-box"></div>
+
+  </div>
+
+  <script>
+    // Clears any browser autofilled values on page load
+    window.onload = function () {
+      document.getElementById("username").value = "";
+      document.getElementById("password").value = "";
+    };
+
+    // Login form handling
+    const loginForm = document.getElementById("loginForm");
+    const errorBox = document.getElementById("errorBox");
+
+    loginForm.addEventListener("submit", async function (event) {
+      event.preventDefault();
+      errorBox.textContent = "";
+
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value;
+
+      try {
+        const response = await fetch("/api/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password })
+        });
+
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok || !data.success) {
+          errorBox.textContent = data.detail || data.message || "Login failed.";
+          return;
+        }
+
+        localStorage.setItem("chatSession", JSON.stringify(data.session));
+        window.location.href = "/index.html";
+      } catch (err) {
+        console.error("Login failed:", err);
+        errorBox.textContent = "Unable to contact the server.";
+      }
+    });
+  </script>
+</body>
+</html>
