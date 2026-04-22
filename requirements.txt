@@ -6,3 +6,5 @@ pydantic
 langgraph
 pypdf2
 numpy
+mysql-connector-python
+werkzeug
