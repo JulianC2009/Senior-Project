@@ -6,12 +6,11 @@
   <title>Senior Project Chatbot</title>
 
   <style>
-
     /* Body styling */
     body 
     {
       font-family: Arial, sans-serif;
-      background-color: linear-gradient(135deg, #e8f1f8, #f6fbff);
+      background: linear-gradient(135deg, #e8f1f8, #f6fbff);
       margin: 0;
       padding: 0;
       display: flex;
@@ -24,8 +23,8 @@
     .chat-container 
     {
       width: 90%;
-      max-width: 700px;
-      height: 85vh;
+      max-width: 760px;
+      height: 88vh;
       background: white;
       border-radius: 15px;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
@@ -43,6 +42,41 @@
       font-size: 20px;
       font-weight: bold;
       text-align: center;
+    }
+
+    /* Session user bar */
+    .session-bar
+    {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 12px;
+      border-bottom: 1px solid #e6e6e6;
+      background: #f7fbff;
+      font-size: 14px;
+    }
+
+    .session-info
+    {
+      color: #333;
+      font-weight: bold;
+    }
+
+    .logout-btn
+    {
+      width: auto;
+      padding: 8px 12px;
+      background: #d9534f;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .logout-btn:hover
+    {
+      background: #c23f3a;
     }
 
     /* Chat controls */
@@ -169,22 +203,21 @@
   <div class="chat-container">
     <div class="chat-header">Health Assistant Chat</div>
 
+    <div class="session-bar">
+      <div id="sessionInfo" class="session-info">Loading session...</div>
+      <button id="logoutBtn" class="logout-btn" type="button">Logout</button>
+    </div>
+
     <div class="chat-controls">
       <label for="roleSelect">Role:</label>
       <select id="roleSelect">
-        <option value="patient" selected>patient</option>
+        <option value="patient">patient</option>
         <option value="doctor">doctor</option>
         <option value="insurance">insurance</option>
-        <option value="admin">admin</option>
       </select>
 
       <label for="patientSelect">Patient:</label>
-      <select id="patientSelect">
-        <option value="patient_001" selected>Patient 001</option>
-        <option value="patient_002">Patient 002</option>
-        <option value="patient_003">Patient 003</option>
-        <option value="patient_004">Patient 004</option>
-      </select>
+      <select id="patientSelect"></select>
 
       <label class="checkbox">
         <input type="checkbox" id="consentCheck" checked />
@@ -206,6 +239,19 @@
     const patientSelect = document.getElementById("patientSelect");
     const roleSelect = document.getElementById("roleSelect");
     const consentCheck = document.getElementById("consentCheck");
+    const sessionInfo = document.getElementById("sessionInfo");
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    // Session state
+    let currentSession = null;
+
+    // Patient label mapping for dropdown display
+    const patientLabels = {
+      patient_001: "Patient 001 - Maria Santos",
+      patient_002: "Patient 002 - James O'Brien",
+      patient_003: "Patient 003 - Priya Kapoor",
+      patient_004: "Patient 004 - Robert Chen"
+    };
 
     function addMessage(text, sender) {
       const msg = document.createElement("div");
@@ -215,15 +261,73 @@
       chatContainerbox.scrollTop = chatContainerbox.scrollHeight;
     }
 
+    // Loads session from localStorage and lock UI to account permissions
+    function loadSession() {
+      const raw = localStorage.getItem("chatSession");
+
+      if (!raw) {
+        window.location.href = "/login.html";
+        return;
+      }
+
+      try {
+        currentSession = JSON.parse(raw);
+      } catch (err) {
+        localStorage.removeItem("chatSession");
+        window.location.href = "/login.html";
+        return;
+      }
+
+      sessionInfo.textContent = `Logged in as: ${currentSession.display_name} (${currentSession.role})`;
+
+      // Role is no longer manually editable
+      roleSelect.value = currentSession.role;
+      roleSelect.disabled = true;
+
+      // Patient choices are based on the logged-in account
+      patientSelect.innerHTML = "";
+
+      if (currentSession.role === "patient") {
+        const opt = document.createElement("option");
+        opt.value = currentSession.patient_id;
+        opt.textContent = patientLabels[currentSession.patient_id] || currentSession.patient_id;
+        patientSelect.appendChild(opt);
+        patientSelect.value = currentSession.patient_id;
+        patientSelect.disabled = true;
+      } else {
+        const allowed = currentSession.allowed_patients || [];
+        allowed.forEach(pid => {
+          const opt = document.createElement("option");
+          opt.value = pid;
+          opt.textContent = patientLabels[pid] || pid;
+          patientSelect.appendChild(opt);
+        });
+        patientSelect.disabled = false;
+      }
+    }
+
+    // Logout handler
+    function logout() {
+      localStorage.removeItem("chatSession");
+      window.location.href = "/login.html";
+    }
+
     async function getBotReply(userMessage) {
       try {
+        const selectedPatient =
+          currentSession.role === "patient"
+            ? currentSession.patient_id
+            : patientSelect.value;
+
         const response = await fetch("/api/chat", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "X-Session-Token": currentSession.session_token
+          },
           body: JSON.stringify({
             message: userMessage,
-            role: roleSelect.value,
-            patient_id: patientSelect.value,
+            patient_id: selectedPatient,
             consent: consentCheck.checked
           })
         });
@@ -232,7 +336,7 @@
 
         if (!response.ok) {
           console.error("API error:", response.status, data);
-          return data.error || `Server error (${response.status})`;
+          return data.detail || data.error || `Server error (${response.status})`;
         }
 
         return data.reply || "(empty reply)";
@@ -263,15 +367,18 @@
       }
     });
 
-    // Clear chat when switching patient/role helps show identity binding and RBAC
+    // Reset chat banner when context-related controls change
     function resetChatBanner() {
       chatContainerbox.innerHTML = "";
       addMessage("Hello I am a health chatbot.", "bot");
     }
 
     patientSelect.addEventListener("change", resetChatBanner);
-    roleSelect.addEventListener("change", resetChatBanner);
     consentCheck.addEventListener("change", resetChatBanner);
+    logoutBtn.addEventListener("click", logout);
+
+    // Initialize locked session state before showing chat
+    loadSession();
 
     // Greeting
     resetChatBanner();
