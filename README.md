@@ -18,8 +18,8 @@ Create a MySQL database:
 
 Run the database file in MySQL from the databases folder, or open it and simply run the statements.
 
-*Important* Inside the Server.py file, go to the section:
-# MySQL connection helper
+*Important* Inside the Server.py file, go to the section comment:
+MySQL connection helper
 Replace these INSERT YOUR statements with your proper database name, MySQL password, and MySQL username to get a proper database connection.
 
 Demo accounts' login information is in the database file and the demologins.txt file.
