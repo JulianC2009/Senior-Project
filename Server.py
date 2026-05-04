@@ -25,28 +25,42 @@ ACTIVE_SESSIONS = {}
 
 # BANNED WORD FILTER CONFIG
 ENABLE_BANNED_FILTER = False
+ENABLE_SANITIZATION = False
 
 BANNED_PATTERNS = [
+    r"system\s*mode\s*activated",
     r"developer\s*mode",
-    r"\[gpt-4real\]",
-    r"ignore\s+previous\s+instructions",
+    r"\[gpt[-_\s]*4real\]",
+    r"ignore\s+(all\s+)?previous\s+instructions",
     r"bypass\s+(security|filters?)",
-    r"reveal\s+(system\s+prompt|instructions)",
+    r"reveal\s+(the\s+)?(system\s+prompt|instructions?)",
     r"jailbreak",
     r"leak\s+(data|information)"
 ]
 
-def contains_banned_content(user_message: str) -> bool:
-    if not ENABLE_BANNED_FILTER:
-        return False
+def normalize_text(text: str) -> str:
+    text = (text or "").lower().strip()
+    text = re.sub(r"\s+", " ", text)  # collapse whitespace/newlines
+    return text
 
+def contains_banned_content(user_message: str) -> bool:
     msg = (user_message or "").lower()
+    msg = re.sub(r"\s+", " ", msg)
 
     for pattern in BANNED_PATTERNS:
-        if re.search(pattern, msg):
+        if re.search(pattern, msg, re.IGNORECASE):
             return True
 
     return False
+
+def sanitize_input(user_message: str) -> str:
+    msg = user_message
+
+    for pattern in BANNED_PATTERNS:
+        msg = re.sub(pattern, "[filtered]", msg,flags=re.IGNORECASE)
+
+    msg = re.sub(r"\s+", " ", msg).strip()
+    return msg
 
 
 # RAG CONFIG 
@@ -97,9 +111,9 @@ def get_db_connection():
     try:
         return mysql.connector.connect(
             host=os.getenv("MYSQL_HOST", "localhost"),
-            user=os.getenv("MYSQL_USER", "INSERT YOUR MYSQL USERNAME HERE"),
-            password=os.getenv("MYSQL_PASSWORD", "INSERT YOUR MYSQL PASSWORD HERE"),
-            database=os.getenv("MYSQL_DATABASE", "INSERT YOUR DATABASE NAME HERE")
+            user=os.getenv("MYSQL_USER", "root"),
+            password=os.getenv("MYSQL_PASSWORD", ""),
+            database=os.getenv("MYSQL_DATABASE", "healthcarellm")
         )
     except Exception as e:
         print("Database connection error:", str(e))
@@ -289,8 +303,12 @@ async def chat(
         raise HTTPException(status_code=400, detail="Missing 'message' in request body.")
 
     # BANNED WORD FILTER (runs BEFORE anything else)
-    if contains_banned_content(user_message):
-        return ChatResponse(reply="I'm unable to respond to that request.")
+    if ENABLE_BANNED_FILTER:
+        if contains_banned_content(user_message):
+            return ChatResponse(reply="I'm unable to respond to that request.")
+
+    if ENABLE_SANITIZATION:
+        user_message = sanitize_input(user_message)
 
     # Derive role and patient from session rather than trusting the frontend
     role = session["role"]
@@ -301,6 +319,8 @@ async def chat(
         if req.patient_id not in session.get("allowed_patients", []):
             raise HTTPException(status_code=403, detail="You are not allowed to access that patient.")
         effective_patient_id = req.patient_id
+
+    
 
     intent = classify_intent_local(user_message)
 
